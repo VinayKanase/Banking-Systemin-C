@@ -18,6 +18,7 @@ d. Search for a particular player using its name.
 #include <stdio.h>
 #include <string.h>
 // #include <wmmintrin.h>
+
 // Player Struct
 struct Player
 {
@@ -33,10 +34,13 @@ int totalPlayersAdded = 0;
 
 // Function Prototypes
 void insertPlayers();
-void displayPlayers();
+void displayPlayersTable();
 int searchPlayerIndex(char name[]);
 void deletePlayer();
 void searchPlayer();
+void displayPlayers();
+
+void sortPlayersAndDisplay();
 
 int main()
 {
@@ -44,10 +48,15 @@ int main()
     int closeProgram = 0;
     while (closeProgram != 1)
     {
-        printf("\e[1;1H\e[2J");
+        printf("\e[1;1H\e[2J"); // Clears output Screen
         // system("clear");
+        printf("\033[0;35m");
         printf("\n\t\t\t------BOWLING PLAYERS STATS------\n\n\n");
-        printf("\t\t\t\t### MENU ###");
+        printf("\033[0m");
+        printf("\033[0;32m");
+        printf("\t\t\t\t▒▒▒▒▒ MENU  ▒▒▒▒▒");
+        printf("\033[0m");
+
         printf("\n\n\t\t\t\t1. Insert\n\t\t\t\t2. Display\n\t\t\t\t3. Delete\n\t\t\t\t4. Search\n\t\t\t\t5. Exit");
         printf("\n\n\tEnter your choice: ");
         scanf("%d", &choice);
@@ -58,7 +67,7 @@ int main()
             insertPlayers();
             break;
         case 2:
-            displayPlayers(players, totalPlayersAdded);
+            displayPlayers();
             break;
         case 3:
             deletePlayer();
@@ -77,7 +86,10 @@ int main()
 
     return 0;
 }
-
+/**
+ * @brief Gets plyers and add them to list.
+ * 
+ */
 void insertPlayers()
 {
     printf("\e[1;1H\e[2J");
@@ -98,16 +110,24 @@ void insertPlayers()
     }
 }
 
-void displayPlayers(struct Player players[], int playerLength)
+/**
+ * @brief Creates and prints table of players entered has param.
+ * 
+ * @param players[]
+ * @param playerLength
+ */
+void displayPlayersTable(struct Player players[], int playerLength)
 {
     char quit[5];
     printf("\e[1;1H\e[2J");
+    printf("\033[0;32m");
     printf("|         NAME        |Total Matches Played|   Wickets Taken    |     Runs Given     |\n");
     printf("---------------------------------------------------------------------------------------\n");
+    printf("\033[0m");
 
     for (int i = 0; i < playerLength; i++)
     {
-        printf("   ");
+        printf(" |");
         char list[4][20];
         sprintf(list[0], "%s", players[i].name);
         sprintf(list[1], "%d", players[i].totalMatches);
@@ -115,7 +135,7 @@ void displayPlayers(struct Player players[], int playerLength)
         sprintf(list[3], "%d", players[i].runs);
         for (int j = 0; j < 4; j++)
         {
-            for (int k = 0; k < 20; k++)
+            for (int k = 0; k <= 20; k++)
             {
                 if (k <= strlen(list[j]))
                     printf("%c", list[j][k]);
@@ -130,6 +150,12 @@ void displayPlayers(struct Player players[], int playerLength)
     scanf("%s", quit);
 }
 
+/**
+ * @brief Uses name of player to find index of player in players list.
+ * 
+ * @param name[]
+ * @return int 
+ */
 int searchPlayerIndex(char name[])
 {
     int i = 0;
@@ -141,6 +167,10 @@ int searchPlayerIndex(char name[])
     return -1;
 }
 
+/**
+ * @brief Asks for player name as input and if player is found removes player from list.
+ * 
+ */
 void deletePlayer()
 {
     printf("\e[1;1H\e[2J");
@@ -163,9 +193,14 @@ void deletePlayer()
             }
             totalPlayersAdded--;
         }
+        displayPlayersTable(players, totalPlayersAdded);
     }
 }
 
+/**
+ * @brief Used to input player name and search if player is found and display it in tabular format.
+ * 
+ */
 void searchPlayer()
 {
     printf("\e[1;1H\e[2J");
@@ -182,7 +217,53 @@ void searchPlayer()
         else
         {
             struct Player _players[1] = {players[index]};
-            displayPlayers(_players, 1);
+            displayPlayersTable(_players, 1);
         }
     }
+}
+
+/**
+ * @brief Displays Table format of Players with sorting or without sorting.
+ * 
+ */
+void displayPlayers()
+{
+    struct Player sortedPlayers[200];
+    printf("\e[1;1H\e[2J");
+    int choice;
+    printf("\n1. Sort and Display Players.\n2. Display in Noraml Order: ");
+    scanf("%d", &choice);
+    if (choice == 1)
+    {
+        sortPlayersAndDisplay();
+    }
+    else if (choice == 2)
+    {
+        displayPlayersTable(players, totalPlayersAdded);
+    }
+}
+
+/**
+ * @brief Sorts Players according to wickets if wickets are equal sort by runs given.
+ * 
+ * 
+ */
+void sortPlayersAndDisplay()
+{
+    struct Player sortedPlayers[200];
+    memcpy(&sortedPlayers, &players, sizeof(players)); // makes a copy of players array to sorted players array
+
+    for (int i = 0; i < totalPlayersAdded - 1; i++)
+    {
+        for (int j = 0; j < totalPlayersAdded - i - 1; j++)
+        {
+            if ((sortedPlayers[j].wickets < sortedPlayers[j + 1].wickets) || (sortedPlayers[j].wickets == sortedPlayers[j + 1].wickets) && (sortedPlayers[j].runs > sortedPlayers[j + 1].runs))
+            {
+                struct Player temp = sortedPlayers[j];
+                sortedPlayers[j] = sortedPlayers[j + 1];
+                sortedPlayers[j + 1] = temp;
+            }
+        }
+    }
+    displayPlayersTable(sortedPlayers, totalPlayersAdded);
 }
